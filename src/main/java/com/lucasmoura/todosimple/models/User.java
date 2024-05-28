@@ -1,5 +1,7 @@
 package com.lucasmoura.todosimple.models;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Column;
@@ -7,10 +9,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 @Entity
 @Table(name = User.TABLE_NAME)
@@ -34,13 +40,16 @@ public class User {
     @Size(groups = CreateUser.class, min = 2, max = 100)
     private String username;
 
+    @JsonProperty(access = Access.WRITE_ONLY)//BAGUIO TOP QUE NAO RETORNA DADO, APENAS CONFIRMAÇÃO SE BATEU O DADO RECEBIDO.
     @Column(name = "password", length = 60, nullable = false)  
     @NotNull(groups = {CreateUser.class, UpdateUser.class})
     @NotEmpty(groups = {CreateUser.class, UpdateUser.class})
     @Size(groups = {CreateUser.class, UpdateUser.class} , min = 8, max = 60)
     private String password;
 
-    //private List<Task> tasks = new ArrayList<Task>();
+    
+    @OneToMany(mappedBy = "user") // Um usuario para muitas Taks
+    private List<Task> tasks = new ArrayList<Task>();
 
     public User(){
     }
@@ -76,16 +85,34 @@ public class User {
         this.password = password;        
     }    
 
+
+    public List<Task> getTasks() {
+        return this.tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
+    }
+
+
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (obj == this)
             return true;
-        if (obj == null || getClass() != obj.getClass())
+        if (obj == null)
             return false;
+            if (!(obj instanceof User))
+                return false;
+            
         User other = (User) obj;
-        return Objects.equals(id, other.id) &&
-               Objects.equals(username, other.username) &&
-               Objects.equals(password, other.password);
+        if (this.id == null)
+            if (other.id != null)
+                return false;
+            else if ( !this.id.equals(other.id))
+                return false;
+        return Objects.equals(this.id, other.id) &&
+               Objects.equals(this.username, other.username) &&
+               Objects.equals(this.password, other.password);
     
         //User user = (User) o;
        // return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(password, user.password);
